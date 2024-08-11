@@ -13,7 +13,7 @@ function ENT:Initialize()
         phys:SetDragCoefficient(150)  -- Ajuste le coefficient de traînée pour réduire le patinage
     end
     self.ply = nil
-    self.isMoving = false  -- Variable pour suivre l'état de mouvement
+    self.isMoving = false 
     self.rotationSpeed = 30  -- Réduit la vitesse de rotation
     self.forwardSpeed = 200  -- Réduit la vitesse de déplacement
 end
@@ -47,7 +47,6 @@ function ENT:Think()
     local toAng = Angle(0, ang.y, ang.z / 50)
     self:SetAngles(LerpAngle(0.675, ang, toAng))
 
-    -- Détecter si la chaise est en mouvement
     if IsValid(self.ply) and self.ply:KeyDown(IN_FORWARD) then
         self.isMoving = true
     else
@@ -66,14 +65,13 @@ function ENT:PhysicsUpdate(phys)
 
     fwd.z = 0
 
-    -- Déplacement en avant
     if not self.ply:KeyDown(IN_MOVELEFT) and not self.ply:KeyDown(IN_MOVERIGHT) and self.ply:KeyDown(IN_FORWARD) and (not self.fwd_cool or self.fwd_cool < CurTime()) then
-        phys:SetVelocityInstantaneous(fwd * self.forwardSpeed)  -- Ajuste la vitesse pour éviter le patinage
+        phys:SetVelocityInstantaneous(fwd * self.forwardSpeed)
         self:EmitSound('buttons/lever1.wav', 50, 85)
         self.fwd_cool = CurTime() + 1
     end
 
-    -- Appliquer la rotation seulement si la chaise est immobile
+
     if not self.isMoving then
         if phys:GetAngleVelocity():WithinAABox(Vector(-100, -100, -100), Vector(100, 100, 100)) then
             local speed = self.rotationSpeed
@@ -88,23 +86,20 @@ function ENT:PhysicsUpdate(phys)
     end
 end
 
--- Hook pour éviter les dégâts causés par la chaise
 hook.Add('EntityTakeDamage', 'WheelchairNoDamage', function(target, dmginfo)
     local attacker = dmginfo:GetAttacker()
     if IsValid(attacker) and attacker:GetClass() == 'wheelchair' then
         if attacker:GetPos():Distance(target:GetPos()) < 100 then
-            dmginfo:SetDamage(0)  -- Annuler les dégâts si le joueur est à proximité immédiate de la chaise
+            dmginfo:SetDamage(0)
         end
     end
 end)
 
--- Hook pour éviter les dégâts lors des collisions contre un mur
+
 hook.Add('OnEntityHit', 'WheelchairCollisionNoDamage', function(ent, hitpos, hitnormal, entity)
     if IsValid(entity) and entity:GetClass() == 'wheelchair' then
-        -- Si la chaise entre en collision avec un joueur ou un NPC, annuler les dégâts
         if ent:IsPlayer() or ent:IsNPC() then
-            -- Ne pas appliquer de dégâts
-            ent:SetHealth(math.min(ent:Health(), ent:Health() + 1))  -- Réparation fictive pour annuler les dégâts
+            ent:SetHealth(math.min(ent:Health(), ent:Health() + 1))
         end
     end
 end)
